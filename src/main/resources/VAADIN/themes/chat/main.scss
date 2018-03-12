@@ -1,0 +1,55 @@
+@import '../valo/valo.scss';
+
+@mixin main {
+  @include valo;
+
+  /* Other styles will be located here
+    Not recommended for Production use!*/
+
+  .chat-main-layout {
+    padding: 5px;
+  }
+
+  .user-list {
+    border-right: 2px solid darkgrey;
+    padding-top: 20px;
+  }
+
+  .v-slot-user-tile {
+    height: 7% !important;
+  }
+
+  .v-window-outerheader {
+    border-bottom: 2px solid darkgrey;
+  }
+
+  .send-layout {
+    margin: 10px;
+  }
+
+  .send-button {
+    margin: 5px;
+  }
+
+  .user-tile {
+    cursor: pointer;
+
+    &:hover {
+      background-color: aquamarine;
+    }
+
+    &:active {
+      background-color: aqua;
+    }
+  }
+
+  .user-selected {
+    background-color: aqua;
+  }
+
+  .chat-conversation {
+    border-radius: 2px;
+    border: 2px solid darkgrey;
+  }
+
+}
