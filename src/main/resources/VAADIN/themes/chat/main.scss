@@ -52,4 +52,30 @@
     border: 2px solid darkgrey;
   }
 
+  .conversation-message-recipient {
+    border-radius: 4px;
+    background-color: rgba(255, 160, 122, .5);
+    padding: 5px;
+    margin: 5px;
+  }
+
+  .conversation-message-author {
+    border-radius: 4px;
+    background-color: rgba(154, 205, 50, .5);
+    padding: 5px;
+    margin: 5px;
+  }
+
+  .conversation-message-author-name {
+    font-size: 14px;
+    font-weight: 700;
+    border-bottom: 1px solid darkgrey;
+  }
+
+  .conversation-message-date {
+    font-size: 12px;
+    font-style: italic;
+    color: white;
+  }
+
 }

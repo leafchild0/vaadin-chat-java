@@ -34,25 +34,16 @@ constructor(private val repository: MessageRepository,
 		label.contentMode = ContentMode.HTML
 
 		val button = Button("Click here to open the chat")
-		button.addClickListener { _ -> UI.getCurrent().addWindow(ChatWindow(repository, userRepository.findAll())) }
+		button.addClickListener { _ -> UI.getCurrent().addWindow(ChatWindow(repository, applicationEventBus,
+			userRepository.findAll())) }
 
-		val mainLayout = VerticalLayout(label, button)
+		val logout = Button("Logout")
+		logout.addClickListener { _ -> UI.getCurrent().page.setLocation("/logout") }
+
+		val mainLayout = VerticalLayout(label, HorizontalLayout(button, logout))
 		mainLayout.setComponentAlignment(label, Alignment.MIDDLE_LEFT)
-		mainLayout.setComponentAlignment(button, Alignment.TOP_LEFT)
 
 		addComponent(mainLayout)
-	}
-
-	override fun attach() {
-
-		super.attach()
-		applicationEventBus.subscribe(this)
-	}
-
-	override fun detach() {
-
-		super.detach()
-		applicationEventBus.unsubscribe(this)
 	}
 
 	companion object {

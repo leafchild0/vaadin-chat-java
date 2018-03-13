@@ -10,18 +10,23 @@ import com.vaadin.icons.VaadinIcons
 import com.vaadin.server.Sizeable
 import com.vaadin.shared.ui.ContentMode
 import com.vaadin.ui.*
+import org.vaadin.spring.events.EventBus
+import org.vaadin.spring.events.annotation.EventBusListenerMethod
+import java.time.format.DateTimeFormatter
 
 /**
  * @author victor
  * @date 3/9/18
  */
-internal class ChatWindow(private val repository: MessageRepository, private val users: List<MessageUser>) : Window() {
+internal class ChatWindow(private val repository: MessageRepository, private val applicationEventBus: EventBus
+.ApplicationEventBus, private val users: List<MessageUser>) : Window() {
 
 	private var recipient: MessageUser? = null
 
 	private var mainLayout: HorizontalLayout? = null
 	private var userList: VerticalLayout? = null
 	private var conversation: VerticalLayout? = null
+	private val send: Button = Button("Send")
 
 	init {
 
@@ -63,13 +68,14 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 
 		val textArea = TextArea("Start chatting")
 		textArea.rows = 4
+		textArea.setWidth(310f, Sizeable.Unit.PIXELS)
 		textArea.placeholder = "Type something here"
 
-		val send = Button("Send")
 		send.addStyleName("send-button")
 		send.setWidth(100f, Sizeable.Unit.PIXELS)
+		send.isEnabled = recipient != null
 		send.addClickListener { _ ->
-			if (!textArea.value.isEmpty()) {
+			if (!textArea.value.isEmpty() && recipient != null) {
 				sendMessage(textArea.value)
 				textArea.clear()
 			}
@@ -84,14 +90,24 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		layout.addStyleName("send-layout")
 
 		conversation = VerticalLayout()
-		conversation!!.setMargin(false)
-		conversation!!.isSpacing = false
-		conversation!!.setSizeFull()
-		conversation!!.addStyleName("chat-conversation")
+		conversation?.setMargin(false)
+		conversation?.isSpacing = false
 
-		chatArea.addComponent(conversation)
+		val panel = Panel()
+		panel.setSizeFull()
+		panel.content = conversation
+
+		val panelBody = VerticalLayout()
+		panelBody.setMargin(false)
+		panelBody.isSpacing = false
+		panelBody.setHeight(390f, Sizeable.Unit.PIXELS)
+		panelBody.setWidth(430f, Sizeable.Unit.PIXELS)
+		panelBody.addComponent(panel)
+		panelBody.addStyleName("chat-conversation")
+
+		chatArea.addComponent(panelBody)
 		chatArea.addComponent(layout)
-		chatArea.setExpandRatio(conversation, 1f)
+		chatArea.setExpandRatio(panelBody, 1f)
 
 		return chatArea
 	}
@@ -99,8 +115,14 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 	private fun sendMessage(text: String) {
 
 		val message = Message(Utils.currentUser, recipient!!, text)
+
+		UI.getCurrent().access({
+			// Save new message directly
+			repository.save(message)
+		})
+
 		// Send event
-		VaadinChatUI.current.eventBus!!.publish(this, MessageSentEvent(this, message))
+		applicationEventBus.publish(this, MessageSentEvent(this, message))
 		// Add message into conversation
 		addMessageToConversation(message)
 
@@ -109,7 +131,30 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 	private fun addMessageToConversation(message: Message) {
 		// Add message to conversation
 		// On left if sender is user
+		val isAuthorMessage = message.author == Utils.currentUser
 
+		val messageLayout = VerticalLayout()
+		messageLayout.setWidthUndefined()
+		messageLayout.setHeight(80f, Sizeable.Unit.PIXELS)
+		messageLayout.isSpacing = false
+		messageLayout.setMargin(false)
+		if(isAuthorMessage) messageLayout.addStyleName("conversation-message-author")
+		else messageLayout.addStyleName("conversation-message-recipient")
+
+		val text = Label(message.body)
+		val author = Label(message.author.username)
+		author.addStyleName("conversation-message-author-name")
+		val sendDate = Label(message.createdDate.format(DateTimeFormatter.ofPattern("dd-MM-yy")))
+		sendDate.addStyleName("conversation-message-date")
+
+		messageLayout.addComponents(author, text, sendDate)
+		messageLayout.setExpandRatio(text, .5f)
+		messageLayout.setComponentAlignment(text, Alignment.MIDDLE_CENTER)
+		conversation?.addComponent(messageLayout)
+		conversation?.setExpandRatio(messageLayout, 0f)
+
+		if(isAuthorMessage) conversation?.setComponentAlignment(messageLayout, Alignment.TOP_LEFT)
+		else conversation?.setComponentAlignment(messageLayout, Alignment.TOP_RIGHT)
 	}
 
 	private fun initUserList() {
@@ -144,26 +189,55 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 				userTile.setComponentAlignment(label, Alignment.MIDDLE_CENTER)
 
 				// Listener
-				userTile.addLayoutClickListener { _ -> openChatWithUser(u, userTile) }
+				userTile.addLayoutClickListener { _ ->
+					recipient = u
+					openChatWithUser(userTile)
+					send.isEnabled = true
+				}
 
-				userList!!.addComponent(userTile)
-				userList!!.setExpandRatio(userTile, .1f)
+				userList?.addComponent(userTile)
+				userList?.setExpandRatio(userTile, .1f)
 			}
 		}
 	}
 
-	private fun openChatWithUser(u: MessageUser, component: HorizontalLayout) {
+	private fun openChatWithUser(component: HorizontalLayout) {
 
-		recipient = u
 		component.addStyleName("user-selected")
-		println(u.username)
+		userList?.iterator()?.forEachRemaining { c ->
+			if (c != component) c.removeStyleName("user-selected")
+		}
 		populateChatHistory()
 
 	}
 
 	private fun populateChatHistory() {
-		// Get messages from repository
-		// Add to conversation
 
+		conversation?.removeAllComponents()
+		// Get messages from repository
+		// Find all by recipient and author
+		val threadMessages = repository.findByAuthorAndRecipient(recipient, Utils.currentUser)
+
+		threadMessages.forEach({ m -> addMessageToConversation(m) })
+	}
+
+	@EventBusListenerMethod
+	fun onNewMessage(event: MessageSentEvent) {
+		// Add message only if it's for current user
+		if (event.message.recipient == Utils.currentUser) {
+			addMessageToConversation(event.message)
+		}
+	}
+
+	override fun attach() {
+
+		super.attach()
+		applicationEventBus.subscribe(this)
+	}
+
+	override fun detach() {
+
+		super.detach()
+		applicationEventBus.unsubscribe(this)
 	}
 }

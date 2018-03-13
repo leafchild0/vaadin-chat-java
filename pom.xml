@@ -146,6 +146,7 @@
                     <compilerPlugins>
                         <!-- Or "spring" for the Spring support -->
                         <plugin>all-open</plugin>
+						<plugin>jpa</plugin>
                     </compilerPlugins>
 
                     <pluginOptions>
@@ -161,6 +162,11 @@
                         <artifactId>kotlin-maven-allopen</artifactId>
                         <version>${kotlin.version}</version>
                     </dependency>
+						<dependency>
+							<groupId>org.jetbrains.kotlin</groupId>
+							<artifactId>kotlin-maven-noarg</artifactId>
+							<version>${kotlin.version}</version>
+						</dependency>
                 </dependencies>
             </plugin>
 			<plugin>

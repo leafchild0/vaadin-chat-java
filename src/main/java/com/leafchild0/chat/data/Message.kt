@@ -16,4 +16,6 @@ data class Message(
 	@Column(name = "body", length = 512) val body: String,
 	@Column(name = "created_date") @DateTimeFormat var createdDate: LocalDate = LocalDate.now(),
 	@Id @GeneratedValue val id: Long = 0
+
+
 )
