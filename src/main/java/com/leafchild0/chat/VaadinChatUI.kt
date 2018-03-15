@@ -29,8 +29,8 @@ import org.vaadin.spring.events.annotation.EnableEventBus
 class VaadinChatUI : UI() {
 
 	@Autowired private var viewProvider: SpringViewProvider? = null
-	@Autowired var eventBus: EventBus.ApplicationEventBus? = null
-	@Autowired var userRepository: UserRepository? = null
+	@Autowired private var eventBus: EventBus.ApplicationEventBus? = null
+	@Autowired private var userRepository: UserRepository? = null
 
 	override fun init(request: VaadinRequest) {
 
@@ -56,7 +56,12 @@ class VaadinChatUI : UI() {
 
 	companion object {
 
-		val current: VaadinChatUI
+		private val current: VaadinChatUI
 			get() = UI.getCurrent() as VaadinChatUI
+
+		fun getEventBus(): EventBus.ApplicationEventBus
+		{
+			return current.eventBus!!
+		}
 	}
 }

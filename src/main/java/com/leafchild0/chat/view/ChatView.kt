@@ -1,6 +1,7 @@
 package com.leafchild0.chat.view
 
 import com.leafchild0.chat.Utils
+import com.leafchild0.chat.VaadinChatUI
 import com.leafchild0.chat.service.MessageRepository
 import com.leafchild0.chat.service.UserRepository
 import com.vaadin.navigator.View
@@ -19,7 +20,7 @@ import org.vaadin.spring.events.EventBus
 @UIScope
 class ChatView @Autowired
 constructor(private val repository: MessageRepository,
-	private val userRepository: UserRepository, private val applicationEventBus: EventBus.ApplicationEventBus) :
+	private val userRepository: UserRepository) :
 	VerticalLayout(), View {
 
 	init {
@@ -34,7 +35,7 @@ constructor(private val repository: MessageRepository,
 		label.contentMode = ContentMode.HTML
 
 		val button = Button("Click here to open the chat")
-		button.addClickListener { _ -> UI.getCurrent().addWindow(ChatWindow(repository, applicationEventBus,
+		button.addClickListener { _ -> UI.getCurrent().addWindow(ChatWindow(repository, VaadinChatUI.getEventBus(),
 			userRepository.findAll())) }
 
 		val logout = Button("Logout")

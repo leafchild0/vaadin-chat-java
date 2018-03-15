@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.User
 /**
  * @author victor
  * @date 3/9/18
+ * Super simple utils object
  */
 object Utils {
 

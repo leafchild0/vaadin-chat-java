@@ -1,7 +1,6 @@
 package com.leafchild0.chat.view
 
 import com.leafchild0.chat.Utils
-import com.leafchild0.chat.VaadinChatUI
 import com.leafchild0.chat.data.Message
 import com.leafchild0.chat.data.MessageUser
 import com.leafchild0.chat.events.MessageSentEvent
@@ -128,10 +127,9 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 
 	}
 
-	private fun addMessageToConversation(message: Message) {
+	private fun addMessageToConversation(message: Message, isAuthorMessage: Boolean = true) {
 		// Add message to conversation
 		// On left if sender is user
-		val isAuthorMessage = message.author == Utils.currentUser
 
 		val messageLayout = VerticalLayout()
 		messageLayout.setWidthUndefined()
@@ -155,6 +153,8 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 
 		if(isAuthorMessage) conversation?.setComponentAlignment(messageLayout, Alignment.TOP_LEFT)
 		else conversation?.setComponentAlignment(messageLayout, Alignment.TOP_RIGHT)
+
+		conversation?.markAsDirtyRecursive()
 	}
 
 	private fun initUserList() {
@@ -218,14 +218,14 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		// Find all by recipient and author
 		val threadMessages = repository.findByAuthorAndRecipient(recipient, Utils.currentUser)
 
-		threadMessages.forEach({ m -> addMessageToConversation(m) })
+		threadMessages.forEach({ m -> addMessageToConversation(m, m.author == Utils.currentUser) })
 	}
 
 	@EventBusListenerMethod
 	fun onNewMessage(event: MessageSentEvent) {
 		// Add message only if it's for current user
-		if (event.message.recipient == Utils.currentUser) {
-			addMessageToConversation(event.message)
+		if (this != event.source) {
+			addMessageToConversation(event.message, false)
 		}
 	}
 
