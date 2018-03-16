@@ -1,5 +1,6 @@
 package com.leafchild0.chat
 
+import com.leafchild0.chat.events.UserLoggedIn
 import com.leafchild0.chat.service.UserRepository
 import com.leafchild0.chat.view.ChatView
 import com.vaadin.annotations.*
@@ -51,6 +52,8 @@ class VaadinChatUI : UI() {
 			val loggedUser = auth.principal as User
 			val user = userRepository!!.findByUsername(loggedUser.username)
 			Utils.currentUser = user
+
+			eventBus?.publish(this, UserLoggedIn(this, user, true))
 		}
 	}
 

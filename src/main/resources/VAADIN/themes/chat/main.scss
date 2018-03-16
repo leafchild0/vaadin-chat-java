@@ -7,12 +7,11 @@
     Not recommended for Production use!*/
 
   .chat-main-layout {
-    padding: 5px;
   }
 
   .user-list {
     border-right: 2px solid darkgrey;
-    padding-top: 20px;
+    padding: 10px;
   }
 
   .v-slot-user-tile {
@@ -49,7 +48,7 @@
 
   .chat-conversation {
     border-radius: 2px;
-    border: 2px solid darkgrey;
+    margin-top: 10px;
   }
 
   .conversation-message-recipient {
@@ -76,6 +75,10 @@
     font-size: 12px;
     font-style: italic;
     color: white;
+  }
+
+  .user-online > .v-icon {
+    color: greenyellow;
   }
 
 }

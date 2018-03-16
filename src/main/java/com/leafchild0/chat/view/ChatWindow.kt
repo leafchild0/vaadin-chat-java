@@ -10,7 +10,6 @@ import com.vaadin.server.Sizeable
 import com.vaadin.shared.ui.ContentMode
 import com.vaadin.ui.*
 import org.vaadin.spring.events.EventBus
-import org.vaadin.spring.events.annotation.EventBusListenerMethod
 import java.time.format.DateTimeFormatter
 
 /**
@@ -23,7 +22,8 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 	private var recipient: MessageUser? = null
 
 	private var mainLayout: HorizontalLayout? = null
-	private var userList: VerticalLayout? = null
+	private var userLayout: VerticalLayout? = null
+	private var userList: MutableMap<MessageUser, Label> = HashMap()
 	private var conversation: VerticalLayout? = null
 	private val send: Button = Button("Send")
 
@@ -48,9 +48,9 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		initUserList()
 		val chatArea = initChatArea()
 
-		mainLayout!!.addComponent(userList)
+		mainLayout!!.addComponent(userLayout)
 		mainLayout!!.addComponent(chatArea)
-		mainLayout!!.setComponentAlignment(userList, Alignment.MIDDLE_LEFT)
+		mainLayout!!.setComponentAlignment(userLayout, Alignment.MIDDLE_LEFT)
 		mainLayout!!.setComponentAlignment(chatArea, Alignment.MIDDLE_RIGHT)
 		mainLayout!!.setExpandRatio(chatArea, .6f)
 
@@ -127,7 +127,7 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 
 	}
 
-	private fun addMessageToConversation(message: Message, isAuthorMessage: Boolean = true) {
+	fun addMessageToConversation(message: Message, isAuthorMessage: Boolean = true) {
 		// Add message to conversation
 		// On left if sender is user
 
@@ -159,13 +159,13 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 
 	private fun initUserList() {
 
-		userList = VerticalLayout()
-		userList!!.setMargin(false)
-		userList!!.isSpacing = true
-		userList!!.setHeight(100f, Sizeable.Unit.PERCENTAGE)
-		userList!!.setWidth(150f, Sizeable.Unit.PIXELS)
-		userList!!.addStyleName("user-list")
-		userList!!.defaultComponentAlignment = Alignment.TOP_LEFT
+		userLayout = VerticalLayout()
+		userLayout!!.setMargin(false)
+		userLayout!!.isSpacing = true
+		userLayout!!.setHeight(100f, Sizeable.Unit.PERCENTAGE)
+		userLayout!!.setWidth(150f, Sizeable.Unit.PIXELS)
+		userLayout!!.addStyleName("user-list")
+		userLayout!!.defaultComponentAlignment = Alignment.TOP_LEFT
 
 		users.forEach { u ->
 
@@ -176,8 +176,6 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 				userTile.addStyleName("user-tile")
 				userTile.setHeight(40f, Sizeable.Unit.PIXELS)
 				userTile.setWidth(100f, Sizeable.Unit.PERCENTAGE)
-
-				// User icon with status
 
 				// User name
 				val label = Label()
@@ -195,16 +193,23 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 					send.isEnabled = true
 				}
 
-				userList?.addComponent(userTile)
-				userList?.setExpandRatio(userTile, .1f)
+				userLayout?.addComponent(userTile)
+				userLayout?.setExpandRatio(userTile, .1f)
+
+				userList[u] = label
 			}
 		}
+	}
+
+	fun setUserActive(user:MessageUser, active:Boolean) {
+		if (active) userList[user]?.addStyleName("user-online")
+		else userList[user]?.removeStyleName("user-online")
 	}
 
 	private fun openChatWithUser(component: HorizontalLayout) {
 
 		component.addStyleName("user-selected")
-		userList?.iterator()?.forEachRemaining { c ->
+		userLayout?.iterator()?.forEachRemaining { c ->
 			if (c != component) c.removeStyleName("user-selected")
 		}
 		populateChatHistory()
@@ -219,25 +224,5 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		val threadMessages = repository.findByAuthorAndRecipient(recipient, Utils.currentUser)
 
 		threadMessages.forEach({ m -> addMessageToConversation(m, m.author == Utils.currentUser) })
-	}
-
-	@EventBusListenerMethod
-	fun onNewMessage(event: MessageSentEvent) {
-		// Add message only if it's for current user
-		if (this != event.source) {
-			addMessageToConversation(event.message, false)
-		}
-	}
-
-	override fun attach() {
-
-		super.attach()
-		applicationEventBus.subscribe(this)
-	}
-
-	override fun detach() {
-
-		super.detach()
-		applicationEventBus.unsubscribe(this)
 	}
 }

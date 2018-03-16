@@ -6,19 +6,19 @@
 </head>
 <body onload='document.f.username.focus();'>
 <div class="login-form">
-    <h3>Login into Chat with Username and Password</h3>
+    <h2 class="login-header">Login into Chat</h2>
     <form class="login-form" name='f' action='/login' method='POST'>
         <table>
             <tr>
-                <td>User:</td>
-                <td><input type='text' name='username' value=''></td>
+                <td><label for="username">User:</label></td>
+                <td><input id="username" class="login-field" type='text' name='username' value=''></td>
             </tr>
             <tr>
-                <td>Password:</td>
-                <td><input type='password' name='password'/></td>
+                <td><label for="password">Password:</label></td>
+                <td><input id="password" class="login-field" type='password' name='password'/></td>
             </tr>
             <tr>
-                <td colspan='2'><input name="submit" type="submit" value="Login"/></td>
+                <td colspan='2'><input class="login-btn" name="submit" type="submit" value="Login"/></td>
             </tr>
         </table>
     </form>
