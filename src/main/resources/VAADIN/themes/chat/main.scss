@@ -23,7 +23,7 @@
   }
 
   .send-layout {
-    margin: 10px;
+    margin-top: 10px;
   }
 
   .send-button {
@@ -48,7 +48,10 @@
 
   .chat-conversation {
     border-radius: 2px;
-    margin-top: 10px;
+  }
+
+  .chat-area {
+    padding: 10px;
   }
 
   .conversation-message-recipient {

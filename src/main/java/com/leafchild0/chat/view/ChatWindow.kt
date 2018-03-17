@@ -5,6 +5,7 @@ import com.leafchild0.chat.data.Message
 import com.leafchild0.chat.data.MessageUser
 import com.leafchild0.chat.events.MessageSentEvent
 import com.leafchild0.chat.service.MessageRepository
+import com.vaadin.event.ShortcutAction
 import com.vaadin.icons.VaadinIcons
 import com.vaadin.server.Sizeable
 import com.vaadin.shared.ui.ContentMode
@@ -26,6 +27,7 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 	private var userList: MutableMap<MessageUser, Label> = HashMap()
 	private var conversation: VerticalLayout? = null
 	private val send: Button = Button("Send")
+	private val panel = Panel()
 
 	init {
 
@@ -61,18 +63,18 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 
 		val chatArea = VerticalLayout()
 		chatArea.isSpacing = false
-		chatArea.setMargin(false)
+		chatArea.setMargin(true)
 		chatArea.setSizeFull()
 		chatArea.addStyleName("chat-area")
 
-		val textArea = TextArea("Start chatting")
-		textArea.rows = 4
-		textArea.setWidth(310f, Sizeable.Unit.PIXELS)
+		val textArea = TextField()
+		textArea.setWidth(100f, Sizeable.Unit.PERCENTAGE)
 		textArea.placeholder = "Type something here"
 
 		send.addStyleName("send-button")
 		send.setWidth(100f, Sizeable.Unit.PIXELS)
 		send.isEnabled = recipient != null
+		send.setClickShortcut(ShortcutAction.KeyCode.ENTER)
 		send.addClickListener { _ ->
 			if (!textArea.value.isEmpty() && recipient != null) {
 				sendMessage(textArea.value)
@@ -83,24 +85,22 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		val layout = HorizontalLayout(textArea, send)
 		layout.isSpacing = false
 		layout.setMargin(false)
-		layout.setHeight(150f, Sizeable.Unit.PIXELS)
 		layout.setComponentAlignment(textArea, Alignment.MIDDLE_LEFT)
+		layout.setExpandRatio(textArea, 1f)
 		layout.setComponentAlignment(send, Alignment.MIDDLE_RIGHT)
 		layout.addStyleName("send-layout")
 
 		conversation = VerticalLayout()
-		conversation?.setMargin(false)
+		conversation?.setMargin(true)
 		conversation?.isSpacing = false
 
-		val panel = Panel()
 		panel.setSizeFull()
 		panel.content = conversation
 
 		val panelBody = VerticalLayout()
 		panelBody.setMargin(false)
 		panelBody.isSpacing = false
-		panelBody.setHeight(390f, Sizeable.Unit.PIXELS)
-		panelBody.setWidth(430f, Sizeable.Unit.PIXELS)
+		panelBody.setSizeFull()
 		panelBody.addComponent(panel)
 		panelBody.addStyleName("chat-conversation")
 
@@ -155,6 +155,8 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		else conversation?.setComponentAlignment(messageLayout, Alignment.TOP_RIGHT)
 
 		conversation?.markAsDirtyRecursive()
+
+		scrollIntoView()
 	}
 
 	private fun initUserList() {
@@ -202,8 +204,10 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 	}
 
 	fun setUserActive(user:MessageUser, active:Boolean) {
+
 		if (active) userList[user]?.addStyleName("user-online")
 		else userList[user]?.removeStyleName("user-online")
+		userLayout?.markAsDirtyRecursive()
 	}
 
 	private fun openChatWithUser(component: HorizontalLayout) {
@@ -224,5 +228,12 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		val threadMessages = repository.findByAuthorAndRecipient(recipient, Utils.currentUser)
 
 		threadMessages.forEach({ m -> addMessageToConversation(m, m.author == Utils.currentUser) })
+
+		scrollIntoView()
+	}
+
+	private fun scrollIntoView() {
+		if (conversation!!.ui != null && conversation!!.componentCount > 0)
+			conversation!!.ui.scrollIntoView(conversation?.getComponent(conversation!!.componentCount - 1))
 	}
 }
