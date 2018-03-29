@@ -136,7 +136,7 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		messageLayout.setHeight(80f, Sizeable.Unit.PIXELS)
 		messageLayout.isSpacing = false
 		messageLayout.setMargin(false)
-		if(isAuthorMessage) messageLayout.addStyleName("conversation-message-author")
+		if (isAuthorMessage) messageLayout.addStyleName("conversation-message-author")
 		else messageLayout.addStyleName("conversation-message-recipient")
 
 		val text = Label(message.body)
@@ -151,7 +151,7 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		conversation?.addComponent(messageLayout)
 		conversation?.setExpandRatio(messageLayout, 0f)
 
-		if(isAuthorMessage) conversation?.setComponentAlignment(messageLayout, Alignment.TOP_LEFT)
+		if (isAuthorMessage) conversation?.setComponentAlignment(messageLayout, Alignment.TOP_LEFT)
 		else conversation?.setComponentAlignment(messageLayout, Alignment.TOP_RIGHT)
 
 		conversation?.markAsDirtyRecursive()
@@ -203,7 +203,7 @@ internal class ChatWindow(private val repository: MessageRepository, private val
 		}
 	}
 
-	fun setUserActive(user:MessageUser, active:Boolean) {
+	fun setUserActive(user: MessageUser, active: Boolean) {
 
 		if (active) userList[user]?.addStyleName("user-online")
 		else userList[user]?.removeStyleName("user-online")
